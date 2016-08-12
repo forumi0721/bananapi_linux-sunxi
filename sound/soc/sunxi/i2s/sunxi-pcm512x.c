@@ -252,35 +252,33 @@ static int sunxi_sndi2s_hw_params(struct snd_pcm_substream *substream,
 		printk("[IIS-0] get_clock_divder_slave: rate=(%lu), bclk_div=(%d), mpll=(%d), mult_fs=(%d)\n",
 			rate, bclk_div, mpll, mult_fs);
 	}
-
 	//call sunxi_iis_set_fmt
+	
 	ret = snd_soc_dai_set_fmt(codec_dai, SND_SOC_DAIFMT_I2S |
 			SND_SOC_DAIFMT_NB_NF/* | SND_SOC_DAIFMT_CBM_CFM*/);
 	if (ret < 0)
 		return ret;
-
+    
 	//call sunxi_iis_set_fmt
 	ret = snd_soc_dai_set_fmt(cpu_dai, SND_SOC_DAIFMT_I2S |
 			SND_SOC_DAIFMT_NB_NF/* | SND_SOC_DAIFMT_CBM_CFM*/);
 	if (ret < 0)
 		return ret;
-
 	//call sunxi_iis_set_sysclk
 	ret = snd_soc_dai_set_sysclk(cpu_dai, 0 , mpll, 0);
 	if (ret < 0)
 		return ret;
-
-	//call sndi2s_set_dai_sysclk
+    
+      /*pcm512x card as slave device, don't need to configure clk of the pcm512x*/
 	ret = snd_soc_dai_set_sysclk(codec_dai, 0 , mpll, 0);
 	if (ret < 0)
 		return ret;
-
+    
 	if(!sunxi_i2s_slave) {
 		//call sunxi_iis_set_clkdiv	
 		ret = snd_soc_dai_set_clkdiv(cpu_dai, SUNXI_DIV_MCLK, mclk_div);
 		if (ret < 0)
 			return ret;
-
 		//call sunxi_iis_set_clkdiv	
 		ret = snd_soc_dai_set_clkdiv(cpu_dai, SUNXI_DIV_BCLK, bclk_div);
 		if (ret < 0)
@@ -291,12 +289,12 @@ static int sunxi_sndi2s_hw_params(struct snd_pcm_substream *substream,
 		if (ret < 0)
 			return ret;
 	}
-
-	//call sndi2s_set_dai_clkdiv
+    
+       /*pcm512x card as slave device, don't need to configure clk of the pcm512x*/
 	ret = snd_soc_dai_set_clkdiv(codec_dai, 0, mult_fs);
 	if (ret < 0)
 		return ret;
-
+    
 	return 0;
 }
 
@@ -310,14 +308,14 @@ static struct snd_soc_dai_link sunxi_sndi2s_dai_link = {
 	.name 		= "I2S",
 	.stream_name 	= "SUNXI-I2S",
 	.cpu_dai_name 	= "sunxi-i2s.0",
-	.codec_dai_name = "sndi2s",
+	.codec_dai_name = "pcm512x-hifi",
 	.platform_name 	= "sunxi-i2s-pcm-audio.0",
-	.codec_name 	= "sunxi-i2s-codec.0",
+	.codec_name 	= "pcm512x.2-004d",
 	.ops 			= &sunxi_sndi2s_ops,
 };
 
 static struct snd_soc_card snd_soc_sunxi_sndi2s = {
-	.name = "sunxi-sndi2s",
+	.name = "sunxi-pcm512x",
 	.owner = THIS_MODULE,
 	.dai_link = &sunxi_sndi2s_dai_link,
 	.num_links = 1,
@@ -336,14 +334,14 @@ static int __devexit sunxi_sndi2s_remove(struct platform_device *pdev)
 }
 
 static struct platform_device sunxi_sndi2s_device = {
-	.name = "sunxi-sndi2s",
+	.name = "sunxi-pcm512x",
 };
 
 static struct platform_driver sunxi_sndi2s_driver = {
 	.probe = sunxi_sndi2s_probe,
 	.remove = __devexit_p(sunxi_sndi2s_remove),
 	.driver = {
-		.name = "sunxi-sndi2s",
+		.name = "sunxi-pcm512x",
 		.owner = THIS_MODULE,
 	},
 };
